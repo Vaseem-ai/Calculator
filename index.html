@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Calculator with Settings</title>
+    <style>
+        /* --- CSS Variables for Themes --- */
+        :root {
+            --bg-color: #222;
+            --calc-bg: #333;
+            --screen-bg: #444;
+            --text-color: white;
+            --btn-bg: #555;
+            --btn-shadow: #3a3a3a;
+            --operator-bg: #ff9f43;
+            --action-bg: #ee5253;
+        }
+
+        /* Light Mode Variables */
+        body.light-mode {
+            --bg-color: #e0e0e0;
+            --calc-bg: #f5f5f5;
+            --screen-bg: #ffffff;
+            --text-color: #333;
+            --btn-bg: #e0e0e0;
+            --btn-shadow: #b0b0b0;
+        }
+
+        /* Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            transition: background 0.3s;
+        }
+
+        .container {
+            position: relative;
+        }
+
+        .calculator {
+            background: var(--calc-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0px 15px 25px rgba(0,0,0,0.3);
+            width: 320px;
+            transition: background 0.3s;
+        }
+
+        /* Header with Settings Icon */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+        
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: transform 0.3s;
+        }
+        .settings-btn:hover { transform: rotate(90deg); }
+
+        /* Display Screen */
+        input#display {
+            width: 100%;
+            height: 70px;
+            background: var(--screen-bg);
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: right;
+            padding: 20px;
+            font-size: 2rem;
+            color: var(--text-color);
+            box-shadow: inset 0px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Buttons Grid */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button.key {
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--text-color);
+            box-shadow: 0px 4px 0px var(--btn-shadow);
+            transition: 0.1s;
+        }
+
+        button.key:active { transform: translateY(4px); box-shadow: none; }
+        
+        .operator { background: var(--operator-bg) !important; color: #222 !important; box-shadow: 0px 4px 0px #cd7f32 !important; font-weight: bold; }
+        .action-btn { background: var(--action-bg) !important; color: white !important; box-shadow: 0px 4px 0px #b33939 !important; }
+        .equal { grid-column: span 2; background: #2e86de !important; color: white !important; box-shadow: 0px 4px 0px #1e5a96 !important; }
+
+        /* --- SETTINGS PANEL (Hidden by default) --- */
+        .settings-panel {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 200px;
+            background: var(--calc-bg);
+            border: 1px solid var(--btn-shadow);
+            border-radius: 10px;
+            padding: 15px;
+            display: none; /* Hidden */
+            box-shadow: 0px 10px 20px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .settings-panel.show { display: block; animation: fadeIn 0.3s; }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        /* Toggle Switch CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #2e86de; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="calculator">
+            <div class="header">
+                <h3>Calculator</h3>
+                <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+            </div>
+
+            <div class="settings-panel" id="settingsPanel">
+                <div class="setting-item">
+                    <span>Light Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Sound</span>
+                    <label class="switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <input type="text" id="display" readonly>
+
+            <div class="buttons">
+                <button class="key action-btn" onclick="clearDisplay()">AC</button>
+                <button class="key action-btn" onclick="deleteLast()">DEL</button>
+                <button class="key operator" onclick="appendToDisplay('%')">%</button>
+                <button class="key operator" onclick="appendToDisplay('/')">/</button>
+
+                <button class="key" onclick="appendToDisplay('7')">7</button>
+                <button class="key" onclick="appendToDisplay('8')">8</button>
+                <button class="key" onclick="appendToDisplay('9')">9</button>
+                <button class="key operator" onclick="appendToDisplay('*')">*</button>
+
+                <button class="key" onclick="appendToDisplay('4')">4</button>
+                <button class="key" onclick="appendToDisplay('5')">5</button>
+                <button class="key" onclick="appendToDisplay('6')">6</button>
+                <button class="key operator" onclick="appendToDisplay('-')">-</button>
+
+                <button class="key" onclick="appendToDisplay('1')">1</button>
+                <button class="key" onclick="appendToDisplay('2')">2</button>
+                <button class="key" onclick="appendToDisplay('3')">3</button>
+                <button class="key operator" onclick="appendToDisplay('+')">+</button>
+
+                <button class="key" onclick="appendToDisplay('.')">.</button>
+                <button class="key" onclick="appendToDisplay('0')">0</button>
+                <button class="key equal" onclick="calculateResult()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById("display");
+        const settingsPanel = document.getElementById("settingsPanel");
+        const soundToggle = document.getElementById("soundToggle");
+
+        // --- Core Calculator Logic ---
+        function appendToDisplay(input) {
+            playSound();
+            display.value += input;
+        }
+
+        function clearDisplay() {
+            playSound();
+            display.value = "";
+        }
+
+        function deleteLast() {
+            playSound();
+            display.value = display.value.slice(0, -1);
+        }
+
+        function calculateResult() {
+            playSound();
+            try {
+                display.value = eval(display.value);
+            } catch (error) {
+                display.value = "Error";
+            }
+        }
+
+        // --- Settings Logic ---
+        
+        // 1. Toggle Settings Menu
+        function toggleSettings() {
+            settingsPanel.classList.toggle("show");
+        }
+
+        // 2. Theme Switcher (Light/Dark)
+        function toggleTheme() {
+            document.body.classList.toggle("light-mode");
+        }
+
+        // 3. Sound Generator (Web Audio API - No external files needed)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound() {
+            // Check if sound is enabled in settings
+            if (!soundToggle.checked) return;
+
+            // Create a short beep sound
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = "sine"; // Sound wave type
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Pitch
+            oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // Close settings when clicking outside
+        document.addEventListener('click', function(event) {
+            const isClickInside = settingsPanel.contains(event.target) || event.target.closest('.settings-btn');
+            if (!isClickInside && settingsPanel.classList.contains('show')) {
+                settingsPanel.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
